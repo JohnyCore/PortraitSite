@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" fill="#050505"/>
+  <g font-family="monospace" font-size="44" font-weight="bold" fill="#ff7a3c" letter-spacing="1">
+    <text x="8" y="47">J</text>
+  </g>
+  <g font-family="monospace" font-size="44" font-weight="bold" fill="#e8e2d6" opacity="0.35">
+    <text x="34" y="47">C</text>
+  </g>
+</svg>
