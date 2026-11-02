@@ -115,6 +115,52 @@ function AsciiField() {
   )
 }
 
+/* the only line on this page that ages. keep it truthful. */
+const NOW = 'building this site, and learning C++ properly.'
+
+/* hand-cut 11x7 monogram: 1 = lit cell, 0 = dark */
+const MONOGRAM = [
+  '11111001110',
+  '00010010001',
+  '00010010000',
+  '00010010000',
+  '10010010000',
+  '11010010001',
+  '01100001110',
+]
+
+/* the monogram assembles itself out of loose glyphs when the hero lands */
+function Portrait() {
+  const cells = useMemo(
+    () =>
+      MONOGRAM.flatMap((row, r) =>
+        [...row].map((bit, c) => ({
+          key: `${r}-${c}`,
+          on: bit === '1',
+          ch: bit === '1' ? (Math.random() < 0.25 ? '@' : '#') : ' ',
+          sx: rand(-170, 170),
+          sy: rand(-130, 130),
+          d: (r + c) * 0.035 + rand(0, 0.18),
+        })),
+      ),
+    [],
+  )
+
+  return (
+    <div className="portrait" aria-hidden="true">
+      {cells.map((c) => (
+        <i
+          key={c.key}
+          className={c.on ? 'pcell' : 'pcell off'}
+          style={{ '--sx': `${c.sx}px`, '--sy': `${c.sy}px`, '--d': `${c.d}s` }}
+        >
+          {c.ch}
+        </i>
+      ))}
+    </div>
+  )
+}
+
 function Fog() {
   return (
     <div className="fog" aria-hidden="true">
@@ -207,14 +253,38 @@ const CMDS = {
     'background :: css keyframes · glyphs · 3 fog layers · 1 grain',
     'no canvas. no webgl. no fonts downloaded.',
   ],
-  help: ['whoami · skills · links · stack · clear · exit'],
+  help: ['whoami · skills · links · stack · now · ls · cat <file> · clear · exit'],
+  ls: ['about.txt   skills.txt   links.txt   now.txt'],
+  'sudo hire me': ['nice try. the door is already open:', '→ t.me/Johny_Core'],
+}
+
+const FILES = {
+  'about.txt': [
+    'johnny core — computer engineering student, iran.',
+    'builds things. ships things. breaks things on purpose.',
+  ],
+  'skills.txt': [
+    'languages  :: python / javascript / c++',
+    'elsewhere  :: dropshipping / computer engineering / it',
+  ],
+  'links.txt': [
+    'github     :: github.com/JohnyCore',
+    'telegram   :: t.me/Johny_Core',
+    'instagram  :: instagram.com/johny._.core',
+  ],
+  'now.txt': [NOW, '— updated whenever it stops being true.'],
 }
 
 function Terminal({ open, close }) {
-  const [lines, setLines] = useState([{ k: 0, t: "type 'help'. esc to leave.", cmd: true }])
+  const [lines, setLines] = useState([{ id: '0', t: "type 'help'. esc to leave.", cmd: true }])
   const [val, setVal] = useState('')
   const input = useRef(null)
   const box = useRef(null)
+  const hist = useRef([])
+  const hidx = useRef(0)
+
+  const ids = useRef(1)
+  const nid = () => String(ids.current++)
 
   useEffect(() => {
     if (open) input.current?.focus()
@@ -231,23 +301,49 @@ function Terminal({ open, close }) {
     const cmd = val.trim().toLowerCase()
     setVal('')
     if (!cmd) return
+    hist.current = [...hist.current, cmd]
+    hidx.current = hist.current.length
+
     if (cmd === 'clear') return setLines([])
     if (cmd === 'exit' || cmd === 'q') return close()
-    const out = CMDS[cmd]
-    setLines((l) => [
-      ...l,
-      { k: l.length, t: `> ${cmd}`, cmd: true },
-      ...(out
-        ? out.map((t, i) => ({ k: l.length + 1 + i, t }))
-        : [{ k: l.length + 1, t: `unknown command: ${cmd} — try 'help'` }]),
-    ])
+
+    const out = cmd.startsWith('cat ')
+      ? (FILES[cmd.slice(4).trim()] ?? [`cat: ${cmd.slice(4).trim()}: no such file`])
+      : CMDS[cmd]
+
+    const add = [
+          { id: nid(), t: `> ${cmd}`, cmd: true },
+          ...(out ?? [`unknown command: ${cmd} — try 'help'`]).map((t) => ({ id: nid(), t })),
+        ]
+        setLines((l) => [...l, ...add])
+  }
+
+  const keys = (e) => {
+    if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (!hist.current.length) return
+      hidx.current = Math.max(0, hidx.current - 1)
+      setVal(hist.current[hidx.current])
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      if (hidx.current >= hist.current.length) return
+      hidx.current += 1
+      setVal(hist.current[hidx.current] ?? '')
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      const cands = [...Object.keys(CMDS), ...Object.keys(FILES).map((f) => `cat ${f}`)]
+      const hits = cands.filter((c) => c.startsWith(val.trim().toLowerCase()))
+      if (hits.length === 1) setVal(hits[0])
+      else if (hits.length > 1)
+        setLines((l) => [...l, { id: nid(), t: hits.join('   ') }])
+    }
   }
 
   return (
     <div className="term" role="dialog" aria-label="command line">
       <div className="term-out" ref={box}>
         {lines.map((l) => (
-          <p key={l.k} className={l.cmd ? 'term-cmd' : ''}>
+          <p key={l.id} className={l.cmd ? 'term-cmd' : ''}>
             {l.t}
           </p>
         ))}
@@ -258,6 +354,7 @@ function Terminal({ open, close }) {
           ref={input}
           value={val}
           onChange={(e) => setVal(e.target.value)}
+          onKeyDown={keys}
           aria-label="command"
           spellCheck="false"
           autoComplete="off"
@@ -365,6 +462,7 @@ export default function App() {
 
       <main>
         <section className="beat hero">
+          <Portrait />
           <p className="eyebrow">SIGNAL 001</p>
           <h1 className="q">WHO ARE YOU?</h1>
           <p className="name">JOHNNY CORE</p>
@@ -419,6 +517,8 @@ export default function App() {
               </li>
             ))}
           </ul>
+
+          <p className="now">now :: {NOW}</p>
 
           <p className="foot">end of signal · {new Date().getFullYear()}</p>
         </section>

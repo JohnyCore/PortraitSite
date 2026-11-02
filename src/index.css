@@ -248,6 +248,57 @@ main { position: relative; z-index: 5; }
   color: rgba(232, 226, 214, 0.62);
 }
 
+/* ---------- glyph monogram ---------- */
+.hero { position: relative; }
+.hero > *:not(.portrait) { position: relative; z-index: 1; }
+
+.hero > .portrait {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(11, 1ch);
+  grid-auto-rows: 1em;
+  justify-content: end;
+  align-content: center;
+  justify-items: center;
+  padding-right: clamp(1rem, 5vw, 5rem);
+  font-size: clamp(11px, 2.7vw, 40px);
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+  /* fades out as you leave the hero — gone by depth ~0.3 */
+  opacity: calc(0.6 - var(--depth, 0) * 2);
+}
+
+.pcell {
+  color: var(--bone);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.pcell.off { color: transparent; }
+
+.hero.in .pcell {
+  animation: form 0.85s cubic-bezier(0.2, 0.8, 0.2, 1) var(--d) both;
+}
+
+@keyframes form {
+  from { opacity: 0; transform: translate3d(var(--sx), var(--sy), 0) rotate(22deg); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- now ---------- */
+.now {
+  margin: 3rem 0 0;
+  padding-left: 0.9rem;
+  border-left: 2px solid var(--ember);
+  font-size: clamp(0.8rem, 1.6vw, 0.95rem);
+  line-height: 1.7;
+  letter-spacing: 0.03em;
+  color: rgba(232, 226, 214, 0.55);
+}
+
 /* ---------- sketchy surfaces ---------- */
 .sketch {
   border: 2px solid rgba(232, 226, 214, 0.45);
@@ -440,6 +491,7 @@ main { position: relative; z-index: 5; }
     scroll-behavior: auto !important;
   }
   .beat > * { opacity: 1; transform: none; }
+  .pcell { opacity: 1; }
   .boot { display: none; }
 }
 
@@ -452,6 +504,7 @@ main { position: relative; z-index: 5; }
   .hud-links { gap: 0.7rem; }
   .beat { padding: 5rem 1.2rem; }
   .fog-layer { opacity: 0.6; }
+  .hero > .portrait { font-size: clamp(12px, 4vw, 26px); padding-right: 0.8rem; opacity: calc(0.35 - var(--depth, 0) * 2); }
   .name { letter-spacing: -0.01em; }
   .tag { padding: 0.45rem 0.8rem; }
 }
