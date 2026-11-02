@@ -51,6 +51,9 @@ body::after {
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
+  /* depth: glyphs recede and sink as you descend */
+  opacity: calc(1 - var(--depth, 0) * 0.5);
+  transform: translate3d(0, calc(var(--depth, 0) * 5vh), 0);
 }
 
 .glyph {
@@ -61,6 +64,14 @@ body::after {
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   will-change: transform;
+}
+
+/* inner span takes the pointer repulsion offset, outer keeps the rise keyframes */
+.glyph > i {
+  display: inline-block;
+  font-style: normal;
+  transform: translate3d(var(--px, 0px), var(--py, 0px), 0);
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
 .glyph.streak {
@@ -79,6 +90,20 @@ body::after {
   inset: -25%;
   z-index: 1;
   pointer-events: none;
+  transform: translate3d(0, calc(var(--depth, 0) * -10vh), 0);
+  transition: transform 0.6s linear;
+}
+
+/* hairline progress signal */
+.signalbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 50;
+  height: 2px;
+  width: calc(var(--depth, 0) * 100%);
+  background: var(--ember);
+  box-shadow: 0 0 12px rgba(255, 122, 60, 0.7);
 }
 
 .fog-layer {
@@ -136,6 +161,15 @@ body::after {
 }
 
 .hud-links a:hover { opacity: 1; color: var(--ember); }
+
+.hud-hint {
+  margin-left: auto;
+  margin-right: 1.2rem;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  color: rgba(255, 122, 60, 0.5);
+  animation: breathe 4s ease-in-out infinite;
+}
 
 /* ---------- beats ---------- */
 main { position: relative; z-index: 5; }
@@ -310,6 +344,61 @@ main { position: relative; z-index: 5; }
   color: rgba(232, 226, 214, 0.24);
 }
 
+/* ---------- terminal ---------- */
+.term {
+  position: fixed;
+  left: 50%;
+  bottom: 1.4rem;
+  transform: translateX(-50%);
+  width: min(680px, calc(100vw - 2rem));
+  z-index: 45;
+  border: 1px solid rgba(255, 122, 60, 0.4);
+  background: rgba(8, 8, 8, 0.92);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+  padding: 0.9rem 1rem;
+  animation: term-in 0.22s ease-out;
+}
+
+@keyframes term-in {
+  from { opacity: 0; transform: translate(-50%, 14px); }
+}
+
+.term-out {
+  max-height: 38vh;
+  overflow-y: auto;
+  font-size: 12.5px;
+  line-height: 1.7;
+  color: rgba(232, 226, 214, 0.78);
+}
+
+.term-out p { margin: 0; white-space: pre-wrap; }
+.term-cmd { color: var(--ember); }
+
+.term-in {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+  padding-top: 0.7rem;
+  border-top: 1px dashed rgba(232, 226, 214, 0.18);
+}
+
+.term-prompt { color: var(--ember); font-size: 13px; }
+
+.term-in input {
+  flex: 1;
+  background: transparent;
+  border: 0;
+  color: var(--bone);
+  font-family: var(--mono);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+  caret-color: var(--ember);
+}
+
+.term-in input:focus { outline: none; }
+
 /* ---------- boot ---------- */
 .boot {
   position: fixed;
@@ -352,6 +441,10 @@ main { position: relative; z-index: 5; }
   }
   .beat > * { opacity: 1; transform: none; }
   .boot { display: none; }
+}
+
+@media (pointer: coarse) {
+  .hud-hint { display: none; }
 }
 
 @media (max-width: 640px) {
